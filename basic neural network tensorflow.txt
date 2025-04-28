@@ -1,0 +1,27 @@
+import numpy as np, tensorflow as tf
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+from tensorflow import keras # import keras from tensorflow
+from keras.models import Sequential
+from keras.layers import Dense
+
+# Load data
+x, y = load_breast_cancer(return_X_y=True)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+
+# Model with dropout
+model = Sequential([
+   Dense(64, activation='relu'), tf.keras.layers.Dropout(0.5),
+   Dense(64, activation='relu'), tf.keras.layers.Dropout(0.5),
+  Dense(1, activation='sigmoid')
+]) 
+model.compile('adam', loss='binary_crossentropy')
+model.fit(x_train, y_train, epochs=30, verbose=1)
+
+# MC Dropout: Predict multiple times
+pred = np.mean([model(x_test, training=True).numpy() for  _ in range(100)], axis=0).flatten()
+y_pred = (pred > 0.5).astype(int)
+
+# Metrics
+print("Accuracy:", accuracy_score(y_test, y_pred))

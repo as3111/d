@@ -1,0 +1,37 @@
+
+import numpy as np, tensorflow as tf
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from tensorflow import keras
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+
+# Load data
+x, y = load_breast_cancer(return_X_y=True)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+
+# Hyperparameters for optimization
+learning_rate = 0.01
+momentum = 0.9
+activation = 'relu'
+
+# Model with dropout
+model = Sequential([
+    Dense(64, activation='relu'), Dropout(0.5),
+    Dense(64, activation='relu'), Dropout(0.5),
+    Dense(1, activation='sigmoid')
+])
+
+model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=learning_rate, momentum=momentum),
+              loss='binary_crossentropy', metrics=['accuracy'])
+
+# Train model
+model.fit(x_train, y_train, epochs=30, verbose=1)
+
+# Predict
+pred = np.mean([model(x_test, training=True).numpy() for _ in range(100)], axis=0).flatten()
+y_pred = (pred > 0.5).astype(int)
+
+# Evaluate
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}")

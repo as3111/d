@@ -1,0 +1,19 @@
+import sympy as sp
+
+# Symbols and function
+x, y = sp.symbols('x y')
+f = x**2 + 3*y**2 + 4*x*y + 5
+
+# Compute and display gradient and Hessian
+grad = [sp.diff(f, v) for v in (x, y)]
+hess = sp.hessian(f, (x, y))
+det_hess = hess.det()
+eigenvals_hess = hess.eigenvals()
+
+print("Gradient:", grad)
+print("Hessian:\n", hess)
+sp.pprint(hess)
+
+print("Determinant of Hessian:", det_hess)
+print("Eigenvalues of Hessian:", eigenvals_hess)
+

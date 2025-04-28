@@ -1,0 +1,21 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read dataset
+data = pd.read_csv('data.csv')  # Make sure you have a 'data.csv' file with 'x' and 'y' columns
+x = data['x'].values
+y = data['y'].values
+
+# Fit polynomial
+p = np.polyfit(x, y, 2)  # 2 is the degree of the polynomial
+y_pred = np.polyval(p, x)
+
+# Plot
+plt.scatter(x, y, color='blue', label='Actual Data')
+plt.plot(x, y_pred, color='red', label='Polynomial Fit')
+plt.title('Polynomial Fit (Dataset)')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.show()

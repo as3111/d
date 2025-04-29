@@ -1,0 +1,32 @@
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.regularizers import l1_l2
+import numpy as np
+
+# Load and preprocess data
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+x_train, x_test = x_train.reshape(-1, 28*28) / 255.0, x_test.reshape(-1, 28*28) / 255.0
+
+# Add noise
+noise = 0.2
+x_train += noise * np.random.randn(*x_train.shape)
+x_test += noise * np.random.randn(*x_test.shape)
+x_train, x_test = np.clip(x_train, 0., 1.), np.clip(x_test, 0., 1.)
+
+# Build model
+model = Sequential([
+    Dense(256, activation='relu', input_shape=(784,), kernel_regularizer=l1_l2(l1=1e-5, l2=1e-4)),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
+])
+
+# Compile and train with EarlyStopping
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+early_stop = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
+
+model.fit(x_train, y_train, epochs=30, validation_split=0.2, callbacks=[early_stop], batch_size=128)
+
+# Evaluate
+print("Test accuracy:", model.evaluate(x_test, y_test)[1])

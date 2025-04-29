@@ -1,0 +1,61 @@
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.datasets import load_breast_cancer
+
+# Load and preprocess data
+data = load_breast_cancer()
+X, y = data.data, data.target
+X = StandardScaler().fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Build BNN with dropout
+def build_bnn():
+    model = tf.keras.Sequential([
+        tf.keras.layers.Input(shape=(X_train.shape[1],)),
+        tf.keras.layers.Dense(64, activation='relu'),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(32, activation='relu'),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(1, activation='sigmoid')
+    ])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+model = build_bnn()
+model.fit(X_train, y_train, epochs=50, batch_size=32, verbose=0)
+
+# MC Dropout predictions
+def mc_predict(X, T=20):
+    preds = np.zeros((T, len(X)))
+    for t in range(T):
+        preds[t] = model(X, training=True).numpy().flatten()
+    return preds.mean(axis=0), preds.std(axis=0)  # Return mean and std deviation
+
+# Predict
+y_probs_mean, y_probs_std = mc_predict(X_test)
+y_pred = (y_probs_mean > 0.5).astype(int)
+
+# Metrics
+acc = accuracy_score(y_test, y_pred)
+prec = precision_score(y_test, y_pred)
+rec = recall_score(y_test, y_pred)
+
+print(f"Accuracy: {acc:.4f}")
+print(f"Precision: {prec:.4f}")
+print(f"Recall: {rec:.4f}")
+
+# Plotting True Labels vs Predicted Probabilities
+plt.figure(figsize=(12, 6))
+plt.errorbar(range(len(X_test)), y_probs_mean, yerr=y_probs_std, fmt='o', label='Predicted Probabilities ± Uncertainty')
+plt.scatter(range(len(X_test)), y_test, color='red', label='True Labels', marker='x')
+plt.title('Bayesian Neural Network Predictions with Uncertainty')
+plt.xlabel('Test Sample Index')
+plt.ylabel('Predicted Probability')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
